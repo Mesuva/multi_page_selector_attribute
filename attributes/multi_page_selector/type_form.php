@@ -1,3 +1,4 @@
+<?php defined('C5_EXECUTE') or die("Access Denied."); ?>
 
 <fieldset class="ccm-attribute ccm-attribute-multipage">
     <legend><?php echo t('Restrictions')?></legend>
