@@ -9,7 +9,7 @@ A multiple page selector attribute for concrete5 version 5.7.
 Once installed, you can fetch the attribute in a page template one of two ways:
 
 ```php
-$products = $c->getAttribute('related_products', 'pageArray');
+$products = $c->getAttribute('related_products');
 // $products now contains an array of collection (page) objects
 
 // or 
