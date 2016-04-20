@@ -23,5 +23,8 @@ if (!empty($products)) {
     }
     echo '</ul>';
 }
+
+For reference, the original string with comma seperated ID values can be retrived via:
+$productsIDsList = $c->getAttribute('related_products', 'raw');
 ```
 
