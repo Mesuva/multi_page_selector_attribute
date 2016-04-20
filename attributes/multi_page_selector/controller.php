@@ -4,14 +4,14 @@ namespace Concrete\Package\MultiPageSelectorAttribute\Attribute\MultiPageSelecto
 
 class Controller extends \Concrete\Core\Attribute\Controller  {
 
- 	public function getValue() {
+	public function getRawValue() {
 		$db = \Database::connection();
 		$value = $db->fetchColumn("select value from atMultiPageSelector where avID = ?", array($this->getAttributeValueID()));
-		return trim($value);	
+		return trim($value);
 	}
-	
-	public function getPageArrayValue() {
-		$value = $this->getValue();
+
+	public function getValue() {
+		$value = $this->getRawValue();
 		$pages = array();
 		$page_ids = array();
 		
@@ -32,7 +32,7 @@ class Controller extends \Concrete\Core\Attribute\Controller  {
 	public function getPageLinkArrayValue() {
 		$nh = \Core::make('helper/navigation');
 		
-		$pages = $this->getPageArrayValue();
+		$pages = $this->getValue();
 		$links = array();
 		
 		foreach($pages as $p) {
@@ -49,10 +49,11 @@ class Controller extends \Concrete\Core\Attribute\Controller  {
 	
  	public function form() {
 		$this->load();
+		$values = array();
 		$value = '';
 
 		if (is_object($this->attributeValue)) {
-			$value = trim($this->getAttributeValue()->getValue());
+			$values = $this->getAttributeValue()->getValue();
 		}
 
 		$ps = \Core::make('helper/form/page_selector');
@@ -64,17 +65,13 @@ class Controller extends \Concrete\Core\Attribute\Controller  {
 		}
 
 		if ($this->akRestrictSingle) {
-			if ($value) {
-				$value = explode(',',$value);
-
-				if (is_array($value)) {
-					$value = array_shift($value);
-				}
+			if (is_array($values)) {
+				$value = array_shift($value);
 			}
 
 			echo $ps->selectFromSiteMap($this->field('value'), $value,  $this->akParentID, $filter);
 		} else {
-			echo $ps->selectMultipleFromSitemap($this->field('value'), explode(',',$value), $this->akParentID, $filter);
+			echo $ps->selectMultipleFromSitemap($this->field('value'), $values, $this->akParentID, $filter);
 		}
 	}
 
