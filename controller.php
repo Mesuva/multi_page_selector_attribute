@@ -10,7 +10,7 @@ class Controller extends Package {
 
 	protected $pkgHandle = 'multi_page_selector_attribute';
 	protected $appVersionRequired = '5.7.5';
-	protected $pkgVersion = '0.9';
+	protected $pkgVersion = '0.9.1';
 	
 	public function getPackageDescription() {
 		return t("Attribute that allows the selection of multiple pages");

@@ -66,7 +66,7 @@ class Controller extends \Concrete\Core\Attribute\Controller  {
 
 		if ($this->akRestrictSingle) {
 			if (is_array($values)) {
-				$value = array_shift($value);
+				$value = array_shift($values);
 			}
 
 			echo $ps->selectFromSiteMap($this->field('value'), $value,  $this->akParentID, $filter);
