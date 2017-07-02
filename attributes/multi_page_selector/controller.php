@@ -69,7 +69,11 @@ class Controller extends \Concrete\Core\Attribute\Controller  {
 				$value = array_shift($values);
 			}
 
-			echo $ps->selectFromSiteMap($this->field('value'), $value,  $this->akParentID, $filter);
+            if (version_compare(\Config::get('concrete.version'), '8.2', '>=')) {
+                echo $ps->selectFromSiteMap($this->field('value'), $value, $this->akParentID, null, $filter);
+            } else {
+                echo $ps->selectFromSiteMap($this->field('value'), $value, $this->akParentID, $filter);
+            }
 		} else {
 			echo $ps->selectMultipleFromSitemap($this->field('value'), $values, $this->akParentID, $filter);
 		}
