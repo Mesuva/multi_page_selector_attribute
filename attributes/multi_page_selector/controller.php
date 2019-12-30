@@ -2,8 +2,16 @@
 
 namespace Concrete\Package\MultiPageSelectorAttribute\Attribute\MultiPageSelector;
 
+use Concrete\Core\Search\ItemList\Database\AttributedItemList;
+use Concrete\Core\Page\Page;
+
 class Controller extends \Concrete\Core\Attribute\Controller  {
 
+	protected $searchIndexFieldDefinition = [
+        'type' => 'text',
+        'options' => ['default' => null, 'notnull' => false],
+    ];
+    
 	public function getRawValue() {
 		$db = \Database::connection();
 		$value = $db->fetchColumn("select value from atMultiPageSelector where avID = ?", array($this->getAttributeValueID()));
@@ -45,6 +53,43 @@ class Controller extends \Concrete\Core\Attribute\Controller  {
 		
 		return $links;			
 	}
+
+	public function getSearchIndexValue() {
+		$pages = $this->getValue();
+		$indexValue = [];
+		foreach($pages as $page) {
+			// Include both the ID and path
+			$indexValue[] = $page->getCollectionID();
+			$indexValue[] = $page->getCollectionPath();
+		}
+		// Follow convention of Topics attribute's indexe value
+		$indexValue = '||' . implode('||', $indexValue) . '||';
+		return $indexValue;
+	}
+
+	public function filterByAttribute(AttributedItemList $list, $value, $comparison = '=')
+    {
+        if (is_array($value)) {
+            $values = $value;
+        } else {
+            $values = [$value];
+        }
+
+        $i = 1;
+        $expressions = [];
+        $qb = $list->getQueryObject();
+        foreach ($values as $value) {
+            if ($value instanceof Page) {
+                $value = $value->getCollectionID();
+            }
+            $column = 'ak_' . $this->attributeKey->getAttributeKeyHandle();
+            $param = $qb->createNamedParameter('%||' . $value . '||%');
+            $expressions[] = $qb->expr()->like($column, $param);
+        }
+
+        $expr = $qb->expr();
+        $qb->andWhere(call_user_func_array([$expr, 'orX'], $expressions));
+    }
 
 	
  	public function form() {
