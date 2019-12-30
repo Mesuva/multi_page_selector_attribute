@@ -11,7 +11,7 @@ class Controller extends \Concrete\Core\Attribute\Controller  {
         'type' => 'text',
         'options' => ['default' => null, 'notnull' => false],
     ];
-    
+
 	public function getRawValue() {
 		$db = \Database::connection();
 		$value = $db->fetchColumn("select value from atMultiPageSelector where avID = ?", array($this->getAttributeValueID()));
@@ -75,16 +75,44 @@ class Controller extends \Concrete\Core\Attribute\Controller  {
             $values = [$value];
         }
 
-        $i = 1;
-        $expressions = [];
         $qb = $list->getQueryObject();
+        $column = 'ak_' . $this->attributeKey->getAttributeKeyHandle();
+
+        // Simple is/is not null
+        if(empty($value)) {
+    		if($comparison == '!=') {
+	            $qb->andWhere($qb->expr()->orX(
+	            	$qb->expr()->isNotNull($column),
+	            	$qb->expr()->neq($column, $qb->expr()->literal(''))
+	            ));
+	        } else {
+        		$qb->andWhere($qb->expr()->orX(
+	            	$qb->expr()->isNull($column),
+	            	$qb->expr()->eq($column, $qb->expr()->literal(''))
+	            ));
+	        }
+	        return;
+    	}
+
+    	// Create multiple conditions
+        $expressions = [];        
         foreach ($values as $value) {
-            if ($value instanceof Page) {
+
+        	if ($value instanceof Page) {
                 $value = $value->getCollectionID();
             }
-            $column = 'ak_' . $this->attributeKey->getAttributeKeyHandle();
+            
             $param = $qb->createNamedParameter('%||' . $value . '||%');
-            $expressions[] = $qb->expr()->like($column, $param);
+            if($comparison == '!=') {
+	            $expressions[] = $qb->expr()->notLike($column, $param);
+	        } else {
+        		$expressions[] = $qb->expr()->like($column, $param);
+	        }
+        }
+
+        // Oddly, NULL values to not match NOT LIKE operator
+        if($comparison == '!=') {
+            $expressions[] = $qb->expr()->isNull($column);
         }
 
         $expr = $qb->expr();
