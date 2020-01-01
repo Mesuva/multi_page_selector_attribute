@@ -2,7 +2,15 @@
 
 namespace Concrete\Package\MultiPageSelectorAttribute\Attribute\MultiPageSelector;
 
+use Concrete\Core\Search\ItemList\Database\AttributedItemList;
+use Concrete\Core\Page\Page;
+
 class Controller extends \Concrete\Core\Attribute\Controller  {
+
+	protected $searchIndexFieldDefinition = [
+        'type' => 'text',
+        'options' => ['default' => null, 'notnull' => false],
+    ];
 
 	public function getRawValue() {
 		$db = \Database::connection();
@@ -45,6 +53,71 @@ class Controller extends \Concrete\Core\Attribute\Controller  {
 		
 		return $links;			
 	}
+
+	public function getSearchIndexValue() {
+		$pages = $this->getValue();
+		$indexValue = [];
+		foreach($pages as $page) {
+			// Include both the ID and path
+			$indexValue[] = $page->getCollectionID();
+			$indexValue[] = $page->getCollectionPath();
+		}
+		// Follow convention of Topics attribute's indexe value
+		$indexValue = '||' . implode('||', $indexValue) . '||';
+		return $indexValue;
+	}
+
+	public function filterByAttribute(AttributedItemList $list, $value, $comparison = '=')
+    {
+        if (is_array($value)) {
+            $values = $value;
+        } else {
+            $values = [$value];
+        }
+
+        $qb = $list->getQueryObject();
+        $column = 'ak_' . $this->attributeKey->getAttributeKeyHandle();
+
+        // Simple is/is not null
+        if(empty($value)) {
+    		if($comparison == '!=') {
+	            $qb->andWhere($qb->expr()->orX(
+	            	$qb->expr()->isNotNull($column),
+	            	$qb->expr()->neq($column, $qb->expr()->literal(''))
+	            ));
+	        } else {
+        		$qb->andWhere($qb->expr()->orX(
+	            	$qb->expr()->isNull($column),
+	            	$qb->expr()->eq($column, $qb->expr()->literal(''))
+	            ));
+	        }
+	        return;
+    	}
+
+    	// Create multiple conditions
+        $expressions = [];        
+        foreach ($values as $value) {
+
+        	if ($value instanceof Page) {
+                $value = $value->getCollectionID();
+            }
+            
+            $param = $qb->createNamedParameter('%||' . $value . '||%');
+            if($comparison == '!=') {
+	            $expressions[] = $qb->expr()->notLike($column, $param);
+	        } else {
+        		$expressions[] = $qb->expr()->like($column, $param);
+	        }
+        }
+
+        // Oddly, NULL values to not match NOT LIKE operator
+        if($comparison == '!=') {
+            $expressions[] = $qb->expr()->isNull($column);
+        }
+
+        $expr = $qb->expr();
+        $qb->andWhere(call_user_func_array([$expr, 'orX'], $expressions));
+    }
 
 	
  	public function form() {
