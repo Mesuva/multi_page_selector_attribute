@@ -219,6 +219,7 @@ class Controller extends \Concrete\Core\Attribute\Controller  {
 
 
 	public function deleteKey() {
+		parent::deleteKey();
 		$db = \Database::connection();
 		$arr = $this->attributeKey->getAttributeValueIDList();
 		foreach($arr as $id) {
