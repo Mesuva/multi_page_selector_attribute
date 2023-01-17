@@ -5,7 +5,7 @@
 
     <div class="form-group">
         <label>
-            <?php echo $form->checkbox('akRestrictSingle', 1, $akRestrictSingle)?> <span><?php echo t('Single Page Selection Only')?></span>
+            <?php echo $form->checkbox('akRestrictSingle', 1, isset($akRestrictSingle) ? $akRestrictSingle : '')?> <span><?php echo t('Single Page Selection Only')?></span>
         </label>
     </div>
 
@@ -21,7 +21,7 @@
 
             <?php if (is_array($pageTypeList)) {
                 foreach ($pageTypeList as $ct) { ?>
-                    <option value="<?php echo $ct->getPageTypeID() ?>" <?php if ($akPtID == $ct->getPageTypeID()) { ?> selected <?php } ?>>
+                    <option value="<?php echo $ct->getPageTypeID() ?>" <?php if (isset($akPtID) && $akPtID == $ct->getPageTypeID()) { ?> selected <?php } ?>>
                         <?php echo $ct->getPageTypeDisplayName() ?>
                     </option>
                     <?php
