@@ -163,9 +163,15 @@ class Controller extends \Concrete\Core\Attribute\Controller  {
 		}
 	}
 
-	public function saveForm($data) {
-		$this->saveValue($data['value']);
-	}
+    public function saveForm($data) {
+        $attData = $this->request->request->get('akID');
+
+        if (isset($attData[$this->getAttributeKey()->getAttributeKeyID()])) {
+            $this->saveValue($attData[$this->getAttributeKey()->getAttributeKeyID()]['value']);
+        } else {
+            $this->saveValue([]);
+        }
+    }
 
 	public function deleteValue() {
 		$db = Database::connection();
